@@ -90,13 +90,16 @@ function! AbbrJump()
     execute "normal ".cmd.'cl'.g:AbbrPrefix.word
   end
 
-  let start=line("'p")
 
   " Jump to placeholder
   let i = 0
   let cleaned = AbbrClean()
-  if search(g:AbbrPlaceholdersPattern,'W') 
-    let hint            = matchlist(getline('.'), g:AbbrPlaceholdersPattern, col('.')-1)[0]
+  " Search current line if start with placeholders
+  let hint    = matchstr(getline('.'), '^\s*'.g:AbbrPlaceholdersPattern)
+  if hint!='' || search(g:AbbrPlaceholdersPattern,'W') 
+    if hint==''
+      let hint  = matchstr(getline('.'), g:AbbrPlaceholdersPattern, col('.')-1)
+    end
     let b:abbr_lastline = line('.')
     " Add ; to avoid vim clean the empty line
     execute 'normal! cf'.hint[-1:].';'
