@@ -174,7 +174,7 @@ function! AbbrGlobalInit()
 
   if g:AbbrAutoInit
     au Syntax,WinEnter * AbbrInitSyntax
-    au BufEnter * AbbrInitMapKeys
+    au BufRead,BufNewFile * AbbrInitMapKeys
   end
 endfunction
 
