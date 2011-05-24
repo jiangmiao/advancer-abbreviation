@@ -16,6 +16,33 @@ Usage
 -----
     Use Shortcut <C-CR> or <S-CR> to expand the abbreviation or jump to next placeholder.
 
+    <C-CR> : Expand keys or jump to next placeholder.
+    <S-CR> : The same as <C-CR>
+    <ESC>  : If the line contain placeholder but now it is blank, 
+             then delete whole line when leave insert mode.
+
+Options
+-------
+    g:AbbrPredefinedShortcuts
+        Default: 1
+
+        Predefined Shortcuts for <C-CR> <S-CR> <ESC>
+        After disable predefined shortcuts, you could map the action to any key you like.
+        see Section: Map the expand and jump key
+
+    g:AbbrPlaceholders
+        Default: ['\/\*TODO\*\/','#TODO#', "'TODO'", '<!--TODO-->']
+
+        The placeholder regex pattern list.
+
+    g:AbbrAutoInit
+        Default: 1
+
+        Autocmd for AbbrInitSyntax and AbbrInitMapKeys
+        au Syntax,WinEnter * AbbrInitSyntax
+        au BufRead,BufNewFile * AbbrInitMapKeys
+
+
 Tutorial
 --------
 ###Preparation
@@ -103,16 +130,25 @@ Write Your Own Abbreviation
 
 Map the expand and jump key
 ---------------------------
+    If <C-CR> or <S-CR> is used in other way, add
+    let g:AbbrPredefinedShortcuts = 0 to .vimrc
+    It will disable the ESC mapping too.
+
     map the expand and jump key to Meta-m(Alt-m)
     inoremap <buffer> <silent> <M-m> <ESC>a<C-R>=AbbrJump()<CR>
+    inoremap <buffer> <silent> <ESC> <C-O>:call AbbrClean()<CR><ESC>
 
 
 TroubleShooting
 ---------------
-####The plugin cannot work.
-    use :imap <C-CR> to check if the key binds correct.
+###The plugin cannot work.
+    1. Check if the key mapping is correct
+    use :imap <C-CR> to check
     The correct output should be
     i   <C-CR>    *@<ESC>a<C-R>=AbbrJump()<CR>
+
+    2. Check if terminal support the key
+    Some terminal doesn't support <C-R>, Try remap the key to other.
 
 Others
 ------

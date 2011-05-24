@@ -1,8 +1,8 @@
 " Advancer Abbreviate
 " Maintainer: Miao Jiang <jiangfriend@gmail.com>
 " Last Change: 2011-5-24
-" Version: 1.0
-" Homepage:
+" Version: 1.0.1
+" Homepage: http://www.vim.org/scripts/script.php?script_id=3598
 " Repository: https://github.com/jiangmiao/advancer-abbreviation
 
 if exists('g:AbbrLoaded') || &cp
@@ -11,18 +11,24 @@ end
 
 let g:AbbrLoaded = 1
 
-if !exists('g:AbbrHint')
-  let g:AbbrHint = ['\/\*TODO\*\/','#TODO#', "'TODO'", '<!--TODO-->']
+if !exists('g:AbbrPlaceholders')
+  let g:AbbrPlaceholders = ['\/\*TODO\*\/','#TODO#', "'TODO'", '<!--TODO-->']
 end
 
-if !exists('g:AbbrAutoGlobalInit')
+" Autocmd
+if !exists('g:AbbrAutoInit')
   let g:AbbrAutoInit = 1
 end
 
-let g:Abbrs           = {}
-let g:AbbrHintPattern = ''
-let g:AbbrPrefix      = 'advabbr_'
-let g:AbbrPattern     = '\S\+'
+" Map <C-CR> <S-CR> <ESC> 
+if !exists('g:AbbrPredefinedShortcuts')
+  let g:AbbrPredefinedShortcuts = 1
+end
+
+let g:Abbrs                   = {}
+let g:AbbrPlaceholdersPattern = ''
+let g:AbbrPrefix              = 'advabbr_'
+let g:AbbrPattern             = '\S\+'
 
 function! AbbrWordReplace(word)
   return 'Z'.char2nr(a:word).'Z'
@@ -85,8 +91,8 @@ function! AbbrJump()
   " Jump to placeholder
   let i = 0
   let cleaned = AbbrClean()
-  if search(g:AbbrHintPattern,'W') 
-    let hint            = matchlist(getline('.'), g:AbbrHintPattern, col('.')-1)[0]
+  if search(g:AbbrPlaceholdersPattern,'W') 
+    let hint            = matchlist(getline('.'), g:AbbrPlaceholdersPattern, col('.')-1)[0]
     let b:abbr_lastline = line('.')
     " Add ; to avoid vim clean the empty line
     execute 'normal! cf'.hint[-1:].';'
@@ -153,20 +159,23 @@ endfunction
 
 " Map buffer shortcuts, Work with autocmd
 function! AbbrInitSyntax()
-  execute 'match Comment /'.g:AbbrHintPattern.'/'
+  execute 'match Comment /'.g:AbbrPlaceholdersPattern.'/'
 endfunction
 
 function! AbbrInitMapKeys()
-  " Use <ESC> instead C-R to avoid E523
-  inoremap <buffer> <silent> <C-CR> <ESC>a<C-R>=AbbrJump()<CR>
-  inoremap <buffer> <silent> <S-CR> <ESC>a<C-R>=AbbrJump()<CR>
-  inoremap <buffer> <silent> <ESC> <C-O>:call AbbrClean()<CR><ESC>
+
+  if g:AbbrPredefinedShortcuts
+    " Use <ESC> instead C-R to avoid E523
+    inoremap <buffer> <silent> <C-CR> <ESC>a<C-R>=AbbrJump()<CR>
+    inoremap <buffer> <silent> <S-CR> <ESC>a<C-R>=AbbrJump()<CR>
+    inoremap <buffer> <silent> <ESC> <C-O>:call AbbrClean()<CR><ESC>
+  end
 endfunction
 
 
 " Map Command
 function! AbbrGlobalInit()
-  let g:AbbrHintPattern = '\('.join(g:AbbrHint,'\|').'\)'
+  let g:AbbrPlaceholdersPattern = '\('.join(g:AbbrPlaceholders,'\|').'\)'
   command! AbbrInitSyntax :call AbbrInitSyntax()
   command! AbbrInitMapKeys :call AbbrInitMapKeys()
 
