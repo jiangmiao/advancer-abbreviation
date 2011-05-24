@@ -4,17 +4,17 @@ Advancer Abbreviation is a Vim plugin to create code snippet quickly
 
 Features
 --------
-*   Support any character except space as abbreviate name.
+*   Support any character except space as abbreviation name.
 *   Quick jump to next placeholder.
 *   Easy to extend.
 
 Installation
 ------------
-    copy plugin/advancer-abbreviate.vim to ~/.vim/plugin
+    copy plugin/advancer-abbreviation.vim to ~/.vim/plugin
 
 Usage
 -----
-    Use Shortcut <C-CR> or <S-CR> to expand the abbreviate or jump to next placeholder.
+    Use Shortcut <C-CR> or <S-CR> to expand the abbreviation or jump to next placeholder.
 
 Tutorial
 --------
@@ -22,7 +22,7 @@ Tutorial
     copy ftplugin-examples/* to ~/.vim/ftplugin
 
     There are 5 examples include c, cpp, javascript, php, ruby
-    The abbreviates supported in example are
+    The abbreviation supported in example are
 
         c          : for std main #i #ii
         cpp        : for std main
