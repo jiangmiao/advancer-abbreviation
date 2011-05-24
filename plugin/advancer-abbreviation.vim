@@ -1,13 +1,14 @@
 " Advancer Abbreviate
 " Maintainer: Miao Jiang <jiangfriend@gmail.com>
-" Last Change: 2011-5-23
+" Last Change: 2011-5-24
 " Version: 1.0
 " Homepage:
-" Repository:
+" Repository: https://github.com/jiangmiao/advancer-abbreviation
 
 if exists('g:AbbrLoaded') || &cp
   finish
 end
+
 let g:AbbrLoaded = 1
 
 if !exists('g:AbbrHint')
@@ -18,10 +19,10 @@ if !exists('g:AbbrAutoGlobalInit')
   let g:AbbrAutoInit = 1
 end
 
-let g:Abbrs = {}
+let g:Abbrs           = {}
 let g:AbbrHintPattern = ''
-let g:AbbrPrefix = 'advabbr_'
-let g:AbbrPattern = '\S\+'
+let g:AbbrPrefix      = 'advabbr_'
+let g:AbbrPattern     = '\S\+'
 
 function! AbbrWordReplace(word)
   return 'Z'.char2nr(a:word).'Z'
@@ -31,18 +32,17 @@ function! AbbrWord(str)
 endfunction
 
 function! AbbrJump()
-  " expand abbr if abbr is valid.
-
   let is_eol = 0
-  let eol = col('.')
-  let right = eol - 1
+  let eol    = col('.')
+  let right  = eol - 1
+
   if col('$') == col('.')
     let is_eol=1
   else
     normal h
   end
 
-  " Expand abbreviation  else
+  " Expand abbreviation
   if right == 0
     let word = ''
   else
@@ -51,8 +51,8 @@ function! AbbrJump()
       let left = 0
     end
     let word = AbbrWord(matchstr(getline('.')[  left : right - 1 ], g:AbbrPattern.'$'))
-    let len = len(word)
-    let i=0
+    let len  = len(word)
+    let i    = 0
     while i<len
       if has_key(g:Abbrs, word[ i : ])
         let word = word[ i : ]
@@ -70,24 +70,25 @@ function! AbbrJump()
   if word != ''
     let rword = substitute(word,'Z\d\+Z',"x",'g')
     let rword = substitute(rword,".","x",'g')
-    let len = len(rword) - 1
-    let cmd = ''
+    let len   = len(rword) - 1
+    let cmd   = ''
     if len > 0
       let cmd = len.'X'
     end
     
-    " Input abbreviaton
+    " Output abbreviaton
     execute "normal ".cmd.'cl'.g:AbbrPrefix.word
   end
 
   let start=line("'p")
 
-  " Jump to TODO block
+  " Jump to placeholder
   let i = 0
   let cleaned = AbbrClean()
   if search(g:AbbrHintPattern,'W') 
-    let hint = matchlist(getline('.'), g:AbbrHintPattern, col('.')-1)[0]
+    let hint            = matchlist(getline('.'), g:AbbrHintPattern, col('.')-1)[0]
     let b:abbr_lastline = line('.')
+    " Add ; to avoid vim clean the empty line
     execute 'normal! cf'.hint[-1:].';'
     return "\<Del>"
   else
@@ -98,14 +99,13 @@ function! AbbrJump()
   end
 
 
-  ""if start == line('.') 
-    if line("'q")>0 && line("'q")<=line('$') && line("'q'") != line('.')
-      normal! `q
+  if line("'q")>0 && line("'q")<=line('$')
+    normal! `q
+    if !is_eol
       return ""
     end
-  ""end
+  end
 
-  ""return start.' '.line('.').' '.line('`Q')
   return "\<Right>"
 endfunction
 
@@ -126,9 +126,9 @@ function! AbbrCreate(args)
     echoe 'invalid advancer abbr '.a:args
   end
 
-  let abbr_name = AbbrWord(args[1])
+  let abbr_name          = AbbrWord(args[1])
   let g:Abbrs[abbr_name] = 1
-  let abbr_name = g:AbbrPrefix.abbr_name
+  let abbr_name          = g:AbbrPrefix.abbr_name
 
   let abbr_context = args[2]
 
@@ -167,10 +167,10 @@ endfunction
 " Map Command
 function! AbbrGlobalInit()
   let g:AbbrHintPattern = '\('.join(g:AbbrHint,'\|').'\)'
-  command! -nargs=+ Abbr :call AbbrCreate(<q-args>)
-  command! -nargs=+ AbbrLoad :call AbbrLoad(<q-args>)
   command! AbbrInitSyntax :call AbbrInitSyntax()
   command! AbbrInitMapKeys :call AbbrInitMapKeys()
+
+  command! -nargs=+ Abbr :call AbbrCreate(<q-args>)
 
   if g:AbbrAutoInit
     au Syntax,WinEnter * AbbrInitSyntax
