@@ -23,12 +23,15 @@ Usage
 
 Options
 -------
-    g:AbbrPredefinedShortcuts
-        Default: 1
+    g:AbbrShortcutExpand 
+        Default: ['<C-CR>', '<S-CR>']
 
-        Predefined Shortcuts for <C-CR> <S-CR> <ESC>
-        After disable predefined shortcuts, you could map the action to any key you like.
-        see Section: Map the expand and jump key
+        A list of expand keys. 
+
+    g:AbbrShortcutEscape
+        Default: ['<ESC>']
+
+        A list of Escape keys
 
     g:AbbrPlaceholders
         Default: ['\/\*TODO\*\/','#TODO#', "'TODO'", '<!--TODO-->']
@@ -41,6 +44,8 @@ Options
         Autocmd for AbbrInitSyntax and AbbrInitMapKeys
         au Syntax,WinEnter * AbbrInitSyntax
         au BufRead,BufNewFile * AbbrInitMapKeys
+
+        AbbrInitMapKeys MUST be invoked, or the no shortcuts will work.
 
 
 Tutorial

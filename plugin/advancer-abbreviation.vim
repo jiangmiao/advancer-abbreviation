@@ -20,10 +20,14 @@ if !exists('g:AbbrAutoInit')
   let g:AbbrAutoInit = 1
 end
 
-" Map <C-CR> <S-CR> <ESC> 
-if !exists('g:AbbrPredefinedShortcuts')
-  let g:AbbrPredefinedShortcuts = 1
+if !exists('g:AbbrShortcutEscape')
+  let g:AbbrShortcutEscape      = ['<ESC>']
 end
+
+if !exists('g:AbbrShortcutExpand')
+  let g:AbbrShortcutExpand = ['<C-CR>', '<S-CR>']
+end
+
 
 let g:Abbrs                   = {}
 let g:AbbrPlaceholdersPattern = ''
@@ -164,12 +168,24 @@ endfunction
 
 function! AbbrInitMapKeys()
 
-  if g:AbbrPredefinedShortcuts
-    " Use <ESC> instead C-R to avoid E523
-    inoremap <buffer> <silent> <C-CR> <ESC>a<C-R>=AbbrJump()<CR>
-    inoremap <buffer> <silent> <S-CR> <ESC>a<C-R>=AbbrJump()<CR>
-    inoremap <buffer> <silent> <ESC> <C-O>:call AbbrClean()<CR><ESC>
+  " Use <ESC>a to avoid E523 main<C-n><C-CR> cause E523
+  if type(g:AbbrShortcutExpand) != type([])
+    let keys = [g:AbbrShortcutExpand]
+  else
+    let keys = g:AbbrShortcutExpand
   end
+  for key in keys
+    execute('inoremap <buffer> <silent> '.key.' <ESC>a<C-R>=AbbrJump()<CR>')
+  endfor
+
+  if type(g:AbbrShortcutEscape) != type([])
+    let keys = [g:AbbrShortcutEscape]
+  else
+    let keys = g:AbbrShortcutEscape
+  end
+  for key in keys
+    execute('inoremap <buffer> <silent> '.key.' <C-O>:call AbbrClean()<CR><ESC>')
+  endfor
 endfunction
 
 
