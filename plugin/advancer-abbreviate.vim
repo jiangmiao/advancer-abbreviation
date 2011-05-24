@@ -13,29 +13,72 @@ let g:AbbrLoaded = 1
 if !exists('g:AbbrHint')
   let g:AbbrHint = ['\/\*TODO\*\/','#TODO#', "'TODO'", '<!--TODO-->']
 end
+
+if !exists('g:AbbrAutoGlobalInit')
+  let g:AbbrAutoInit = 1
+end
+
 let g:Abbrs = {}
 let g:AbbrHintPattern = ''
+let g:AbbrPrefix = 'advabbr_'
+let g:AbbrPattern = '\S\+'
+
+function! AbbrWordReplace(word)
+  return 'Z'.char2nr(a:word).'Z'
+endfunction
+function! AbbrWord(str)
+  return substitute(a:str, "[^a-zA-Y0-9_]",'\=AbbrWordReplace(submatch(0))','g')
+endfunction
+
 function! AbbrJump()
   " expand abbr if abbr is valid.
 
   let is_eol = 0
+  let eol = col('.')
+  let right = eol - 1
   if col('$') == col('.')
     let is_eol=1
   else
     normal h
   end
 
-  " Expand abbreviation
-  let backup = @p
-  let @p=''
-  normal! "pciw;
-  if match(@p, '^\w\+$') != -1 && has_key(g:Abbrs, 'abbr_'.@p)
-    execute "normal clabbr_".@p
+  " Expand abbreviation  else
+  if right == 0
+    let word = ''
   else
-      execute 'normal! cl'.@p
-  end
-  let @p = backup
+    let left = right - 20
+    if left < 0
+      let left = 0
+    end
+    let word = AbbrWord(matchstr(getline('.')[  left : right - 1 ], g:AbbrPattern.'$'))
+    let len = len(word)
+    let i=0
+    while i<len
+      if has_key(g:Abbrs, word[ i : ])
+        let word = word[ i : ]
+        break
+      end
+      let i = i+1
+    endwhile
 
+    if i == len
+      let word = ''
+    end
+  end
+
+
+  if word != ''
+    let rword = substitute(word,'Z\d\+Z',"x",'g')
+    let rword = substitute(rword,".","x",'g')
+    let len = len(rword) - 1
+    let cmd = ''
+    if len > 0
+      let cmd = len.'X'
+    end
+    
+    " Input abbreviaton
+    execute "normal ".cmd.'cl'.g:AbbrPrefix.word
+  end
 
   let start=line("'p")
 
@@ -54,14 +97,13 @@ function! AbbrJump()
     end
   end
 
-  if start == line('.') && line("'q")
-    if line("'q'") != line('.')
+
+  ""if start == line('.') 
+    if line("'q")>0 && line("'q")<=line('$') && line("'q'") != line('.')
       normal! `q
       return ""
-    else
-      normal! `q
     end
-  end
+  ""end
 
   ""return start.' '.line('.').' '.line('`Q')
   return "\<Right>"
@@ -79,21 +121,14 @@ function! AbbrEnd()
 endfunction
 
 function! AbbrCreate(args)
-  let args = matchlist(a:args, '^\s*\(.\{-}\)\s\+\(.*\)$')
+  let args = matchlist(a:args, '^\s*\(.\{-1,}\)\s\+\(.*\)$')
   if len(args) == 0
-    return
+    echoe 'invalid advancer abbr '.a:args
   end
 
-  let abbr_name    = args[1]
-
-  if abbr_name == ''
-    return
-  end
-
-  
-  " Store abbr_name index to Abbrs
-  let abbr_name = 'abbr_'.abbr_name
+  let abbr_name = AbbrWord(args[1])
   let g:Abbrs[abbr_name] = 1
+  let abbr_name = g:AbbrPrefix.abbr_name
 
   let abbr_context = args[2]
 
@@ -122,9 +157,10 @@ function! AbbrInitSyntax()
 endfunction
 
 function! AbbrInitMapKeys()
-  inoremap <buffer> <silent> <C-CR> <C-R>=AbbrJump()<CR>
-  inoremap <buffer> <silent> <S-CR> <C-R>=AbbrJump()<CR>
-  inoremap <buffer> <silent> <ESC> <ESC>:call AbbrClean()<CR>
+  " Use <ESC> instead C-R to avoid E523
+  inoremap <buffer> <silent> <C-CR> <ESC>a<C-R>=AbbrJump()<CR>
+  inoremap <buffer> <silent> <S-CR> <ESC>a<C-R>=AbbrJump()<CR>
+  inoremap <buffer> <silent> <ESC> <C-O>:call AbbrClean()<CR><ESC>
 endfunction
 
 
@@ -135,8 +171,11 @@ function! AbbrGlobalInit()
   command! -nargs=+ AbbrLoad :call AbbrLoad(<q-args>)
   command! AbbrInitSyntax :call AbbrInitSyntax()
   command! AbbrInitMapKeys :call AbbrInitMapKeys()
-  au Syntax,WinEnter * AbbrInitSyntax
-  au BufEnter * AbbrInitMapKeys
+
+  if g:AbbrAutoInit
+    au Syntax,WinEnter * AbbrInitSyntax
+    au BufEnter * AbbrInitMapKeys
+  end
 endfunction
 
 
