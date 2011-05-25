@@ -19,7 +19,7 @@ Usage
     <S-CR> : Smart Expand or jump to next placeholder.
     <C-CR> : Force Expand or jump to next placeholder.
     <ESC>  : If the line contain placeholder but now it is blank, 
-             then delete whole line when leave insert mode.
+             then delete whole line and leave insert mode.
 
 Options
 -------
@@ -151,15 +151,6 @@ Write Your Own Abbreviation
     /*TODO*/, #TODO#, 'TODO', <!--TODO-->
     choose them according to which language is using. 
     for example, /*TODO*/ use for c, cpp, 'TODO' use for ruby
-
-
-    Non-Word character ()[]{}"' any space
-    foo.main EXPAND foo.main
-    foo,main EXPAND foo,main
-    foo, main EXPAND main
-    foo(main EXPAND main
-    I'm EXPAND I'm or m
-
 
 Map the expand and jump key
 ---------------------------
