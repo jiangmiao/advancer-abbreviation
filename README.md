@@ -16,17 +16,31 @@ Usage
 -----
     Use Shortcut <C-CR> or <S-CR> to expand the abbreviation or jump to next placeholder.
 
-    <C-CR> : Expand keys or jump to next placeholder.
-    <S-CR> : The same as <C-CR>
+    <S-CR> : Smart Expand or jump to next placeholder.
+    <C-CR> : Force Expand or jump to next placeholder.
     <ESC>  : If the line contain placeholder but now it is blank, 
              then delete whole line when leave insert mode.
 
 Options
 -------
-    g:AbbrShortcutExpand 
-        Default: ['<C-CR>', '<S-CR>']
+    g:AbbrShortcutSmartExpand 
+        Default: ['<S-CR>']
 
         A list of expand keys. 
+        for std.main will try expand std.main only.
+        for std(main will try expand std(main and main.
+
+    g:AbbrShortcutForceExpand
+        Default: ['<C-CR>'] 
+
+        A list of force expand keys.
+        for std.main will try expand std.main and main.
+        for std(main will try expand std(main and main.
+
+    g:AbbrShortcutNoExpand
+        Default: []
+
+        Skip expand, jump to next placeholder.
 
     g:AbbrShortcutEscape
         Default: ['<ESC>']
@@ -47,6 +61,11 @@ Options
 
         AbbrInitMapKeys MUST be invoked, or the no shortcuts will work.
 
+
+    g:AbbrSplitPattern         
+        Default: '[()\[\]{}]'
+
+        Use for SmartExpand, bracket is not consider as a word.
 
 Tutorial
 --------
@@ -132,6 +151,15 @@ Write Your Own Abbreviation
     /*TODO*/, #TODO#, 'TODO', <!--TODO-->
     choose them according to which language is using. 
     for example, /*TODO*/ use for c, cpp, 'TODO' use for ruby
+
+
+    Non-Word character ()[]{}"' any space
+    foo.main EXPAND foo.main
+    foo,main EXPAND foo,main
+    foo, main EXPAND main
+    foo(main EXPAND main
+    I'm EXPAND I'm or m
+
 
 Map the expand and jump key
 ---------------------------

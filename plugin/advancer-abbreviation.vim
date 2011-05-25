@@ -1,7 +1,7 @@
 " Advancer Abbreviate
 " Maintainer: Miao Jiang <jiangfriend@gmail.com>
-" Last Change: 2011-5-24
-" Version: 1.0.1
+" Last Change: 2011-5-25
+" Version: 1.0.2
 " Homepage: http://www.vim.org/scripts/script.php?script_id=3598
 " Repository: https://github.com/jiangmiao/advancer-abbreviation
 
@@ -24,15 +24,32 @@ if !exists('g:AbbrShortcutEscape')
   let g:AbbrShortcutEscape      = ['<ESC>']
 end
 
-if !exists('g:AbbrShortcutExpand')
-  let g:AbbrShortcutExpand = ['<C-CR>', '<S-CR>']
+" Will not expand bar in foo.bar
+if !exists('g:AbbrShortcutSmartExpand')
+  let g:AbbrShortcutSmartExpand = ['<S-CR>']
+end
+
+" Will expand bar in foo.bar
+if !exists('g:AbbrShortcutForceExpand')
+  let g:AbbrShortcutForceExpand = ['<C-CR>']
+end
+
+if !exists('g:AbbrShortcutNoExpand')
+  let g:AbbrShortcutNoExpand = []
 end
 
 
 let g:Abbrs                   = {}
 let g:AbbrPlaceholdersPattern = ''
 let g:AbbrPrefix              = 'advabbr_'
+"Strict mode
+"let g:AbbrPattern             = '[a-zA-Z0-9_#\$]\+'
 let g:AbbrPattern             = '\S\+'
+
+" Use for Smartexpand, make foo(bar try to match foo(bar and bar
+if !exists('g:AbbrSplitPattern')
+  let g:AbbrSplitPattern         = '[()\[\]{}]'
+end
 
 function! AbbrWordReplace(word)
   return 'Z'.char2nr(a:word).'Z'
@@ -41,7 +58,13 @@ function! AbbrWord(str)
   return substitute(a:str, "[^a-zA-Y0-9_]",'\=AbbrWordReplace(submatch(0))','g')
 endfunction
 
-function! AbbrJump()
+let s:NoExpand    = 0
+let s:SmartExpand = 1
+let s:ForceExpand = 2
+
+
+" mode = 0 normal, 1 force 2 no
+function! AbbrDoExpand(mode)
   let is_eol = 0
   let eol    = col('.')
   let right  = eol - 1
@@ -53,30 +76,62 @@ function! AbbrJump()
   end
 
   " Expand abbreviation
-  if right == 0
-    let word = ''
-  else
+  if a:mode != s:NoExpand && right != 0
     let left = right - 20
     if left < 0
       let left = 0
     end
-    let word = AbbrWord(matchstr(getline('.')[  left : right - 1 ], g:AbbrPattern.'$'))
-    let len  = len(word)
-    let i    = 0
-    while i<len
-      if has_key(g:Abbrs, word[ i : ])
-        let word = word[ i : ]
-        break
-      end
-      let i = i+1
-    endwhile
-
-    if i == len
-      let word = ''
+    if a:mode == s:SmartExpand
+      let splite_pattern = g:AbbrSplitPattern
+    else
+      let splite_pattern = '[^a-zA-Z0-9_]'
     end
+
+    if a:mode == s:SmartExpand || a:mode == s:ForceExpand
+      " Smart and ForceExpand"{{{
+      let word  = matchstr(getline('.')[  left : right - 1 ], g:AbbrPattern.'$')
+      let words = split(word, splite_pattern.'\zs')
+      let len = len(words)
+
+      let i     = 0
+      while i<len
+        let word = AbbrWord(join(words[ i : ],''))
+        if has_key(g:Abbrs, word)
+          break
+        end
+        let i = i+1
+      endwhile
+
+      if i == len
+        let word = ''
+      end
+      "}}}
+    else
+      " Fully Force Expand not in using"{{{
+      " Force Expand Everything, Current not used std.main will
+      " try std.main td.main d.main .main main ain in n
+      let word = AbbrWord(matchstr(getline('.')[  left : right - 1 ], g:AbbrPattern.'$'))
+      let len  = len(word)
+      let i    = 0
+      while i<len
+        if has_key(g:Abbrs, word[ i : ])
+          let word = word[ i : ]
+          break
+        end
+        let i = i+1
+      endwhile
+
+      if i == len
+        let word = ''
+      end
+      "}}}
+    end
+  else
+    let word=''
   end
 
 
+  " Expand the abbreviation "{{{
   if word != ''
     let rword = substitute(word,'Z\d\+Z',"x",'g')
     let rword = substitute(rword,".","x",'g')
@@ -85,13 +140,13 @@ function! AbbrJump()
     if len > 0
       let cmd = len.'X'
     end
-    
+
     " Output abbreviaton
     execute "normal ".cmd.'cl'.g:AbbrPrefix.word
   end
+"}}}
 
-
-  " Jump to placeholder
+  " Jump to next placeholder
   let i = 0
   let cleaned = AbbrClean()
   " Search current line if start with placeholders
@@ -111,9 +166,10 @@ function! AbbrJump()
     end
   end
 
-
-  if line("'q")>0 && line("'q")<=line('$')
+  " placeholder is not found
+  if line("'q")>0 && line("'q")<=line('$') && line('.') != line("'q")
     normal! `q
+    delmark q
     if !is_eol
       return ""
     end
@@ -122,6 +178,18 @@ function! AbbrJump()
   return "\<Right>"
 endfunction
 
+function! AbbrSmartExpand()
+  let rt= AbbrDoExpand(s:SmartExpand)
+  return rt
+endfunction
+
+function! AbbrForceExpand()
+  return AbbrDoExpand(s:ForceExpand)
+endfunction
+
+function! AbbrNoExpand()
+  return AbbrDoExpand(s:NoExpand)
+endfunction
 
 function! AbbrBegin()
   mark p
@@ -129,13 +197,13 @@ function! AbbrBegin()
 endfunction
 
 function! AbbrEnd()
-  normal mq`p
+  normal! mq`p
   return "\<Right>"
 endfunction
 
 function! AbbrCreate(args)
   let args = matchlist(a:args, '^\s*\(.\{-1,}\)\s\+\(.*\)$')
-  if len(args) == 0
+  if len(args) == 0 || match(args[1], g:AbbrPattern) == -1
     echoe 'invalid advancer abbr '.a:args
   end
 
@@ -147,7 +215,7 @@ function! AbbrCreate(args)
 
   let abbr_begin   = '<C-R>=AbbrBegin()<CR>'
   let abbr_end     = '<C-R>=AbbrEnd()<CR>'
-  let abbr_jump    = '<C-R>=AbbrJump()<CR>'
+  let abbr_jump    = '<C-R>=AbbrSmartExpand()<CR>'
 
   execute("inoreab <buffer> <silent> ".abbr_name." ".abbr_begin.abbr_context.abbr_end)
 endfunction
@@ -169,24 +237,30 @@ function! AbbrInitSyntax()
   execute 'match Comment /'.g:AbbrPlaceholdersPattern.'/'
 endfunction
 
+function! s:AbbrArray(ob)
+  if type(a:ob) != type([])
+    let keys = [a:ob]
+  else
+    let keys = a:ob
+  end
+  return keys
+endfunction
 function! AbbrInitMapKeys()
 
   " Use <ESC>a to avoid E523 main<C-n><C-CR> cause E523
-  if type(g:AbbrShortcutExpand) != type([])
-    let keys = [g:AbbrShortcutExpand]
-  else
-    let keys = g:AbbrShortcutExpand
-  end
-  for key in keys
-    execute('inoremap <buffer> <silent> '.key.' <ESC>a<C-R>=AbbrJump()<CR>')
+  for key in s:AbbrArray(g:AbbrShortcutNoExpand)
+    execute('inoremap <buffer> <silent> '.key.' <ESC>a<C-R>=AbbrNoExpand()<CR>')
   endfor
 
-  if type(g:AbbrShortcutEscape) != type([])
-    let keys = [g:AbbrShortcutEscape]
-  else
-    let keys = g:AbbrShortcutEscape
-  end
-  for key in keys
+  for key in s:AbbrArray(g:AbbrShortcutSmartExpand)
+    execute('inoremap <buffer> <silent> '.key.' <ESC>a<C-R>=AbbrSmartExpand()<CR>')
+  endfor
+
+  for key in s:AbbrArray(g:AbbrShortcutForceExpand)
+    execute('inoremap <buffer> <silent> '.key.' <ESC>a<C-R>=AbbrForceExpand()<CR>')
+  endfor
+
+  for key in s:AbbrArray(g:AbbrShortcutEscape)
     execute('inoremap <buffer> <silent> '.key.' <C-O>:call AbbrClean()<CR><ESC>')
   endfor
 endfunction
