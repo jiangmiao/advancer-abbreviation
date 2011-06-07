@@ -16,8 +16,58 @@ Advancer Abbreviation 是一个用于创建代码片断的VIM插件
 -----
     使用 <C-CR> 或 <S-CR> 展开或跳转
 
+    <S-CR> : Smart Expand or jump to next placeholder.
+    <C-CR> : Force Expand or jump to next placeholder.
+    <ESC>  : If the line contain placeholder but now it is blank, 
+             then delete whole line and leave insert mode.
+
+选项
+----
+    g:AbbrShortcutSmartExpand 
+        缺省: ['<S-CR>']
+
+        SmartExpand快捷键列表
+        std.main 将仅展开 std.main
+        std(main 将尝试展开std(main与 main, 因为(不作为单词的一部份
+
+    g:AbbrShortcutForceExpand
+        缺省: ['<C-CR>'] 
+
+        A list of force expand keys.
+        for std.main will try expand std.main and main.
+        for std(main will try expand std(main and main.
+
+    g:AbbrShortcutNoExpand
+        缺省: []
+
+        Skip expand, jump to next placeholder.
+
+    g:AbbrShortcutEscape
+        缺省: ['<ESC>']
+
+        A list of Escape keys
+
+    g:AbbrPlaceholders
+        缺省: ['\/\*TODO\*\/','#TODO#', "'TODO'", '<!--TODO-->']
+
+        The placeholder regex pattern list.
+
+    g:AbbrAutoInit
+        缺省: 1
+
+        Autocmd for AbbrInitSyntax and AbbrInitMapKeys
+        au Syntax,WinEnter * AbbrInitSyntax
+        au BufRead,BufNewFile * AbbrInitMapKeys
+
+        AbbrInitMapKeys MUST be invoked, or the no shortcut will work.
+
+    g:AbbrSplitPattern         
+        缺省: '[()\[\]{}]'
+
+        用于SmartExpand，括号也不作为单词的一部份
+
 教程
---------
+----
 ###准备
     复制 ftplugin-examples/* 到 ~/.vim/ftplugin
 
@@ -102,24 +152,29 @@ Advancer Abbreviation 是一个用于创建代码片断的VIM插件
 
 重新定制快捷键
 ---------------------------
-    如果C-CR或S-CR有其它用途，在.vimrc中加入 
-    let g:AbbrPredefinedShortcuts = 0
-    禁止脚本对C-CR于S-SR进行map
-    再加入
-    inoremap <buffer> <silent> <M-m> <ESC>a<C-R>=AbbrJump()<CR>
+    如果C-CR, S-CR 或ESC有其它用途，在.vimrc中设置
+    g:AbbrShortcutSmartExpand
+    g:AbbrShortcutForceExpand
+    g:AbbrShortcutEscape
+    如 
+    let g:AbbrShortcutSmartExpand = '<M-m>'
+    let g:AbbrShortcutSmartExpand = ['<M-m>', '<S-CR>']
     绑定展开动作到Alt-m键。<M-m>可以改成任何键。
+    可以是单个也可以是多个快捷键
 
 
 问题
 ---------------
 ####插件不能工作
     1、检查按键是否映射正确
-    use :imap <C-CR> to check if the key binds correct.
+    use :imap <S-CR> to check if the key binds correct.
     The correct 输出 should be
-    i   <C-CR>    *@<ESC>a<C-R>=AbbrJump()<CR>
+    i   <S-CR>    *@<ESC>a<C-R>=AbbrSmartExpand()<CR>
+    如果没有，调用命令:AbbrInitMapKeys<CR> 重新Map快捷键
 
     2、终端是否支持相应的快捷键。
     比如有的终端不对持<C-CR>，有的不支持Alt。
+
 
 其它
 ------

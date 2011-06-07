@@ -39,7 +39,6 @@ if !exists('g:AbbrShortcutNoExpand')
 end
 
 
-let g:Abbrs                   = {}
 let g:AbbrPlaceholdersPattern = ''
 let g:AbbrPrefix              = 'advabbr_'
 "Strict mode
@@ -96,7 +95,7 @@ function! AbbrDoExpand(mode)
       let i     = 0
       while i<len
         let word = AbbrWord(join(words[ i : ],''))
-        if has_key(g:Abbrs, word)
+        if has_key(b:Abbrs, word)
           break
         end
         let i = i+1
@@ -114,7 +113,7 @@ function! AbbrDoExpand(mode)
       let len  = len(word)
       let i    = 0
       while i<len
-        if has_key(g:Abbrs, word[ i : ])
+        if has_key(b:Abbrs, word[ i : ])
           let word = word[ i : ]
           break
         end
@@ -208,7 +207,10 @@ function! AbbrCreate(args)
   end
 
   let abbr_name          = AbbrWord(args[1])
-  let g:Abbrs[abbr_name] = 1
+  if !exists('b:Abbrs')
+    let b:Abbrs = {}
+  end
+  let b:Abbrs[abbr_name] = 1
   let abbr_name          = g:AbbrPrefix.abbr_name
 
   let abbr_context = args[2]
@@ -276,7 +278,7 @@ function! AbbrGlobalInit()
 
   if g:AbbrAutoInit
     au Syntax,WinEnter * AbbrInitSyntax
-    au BufRead,BufNewFile * AbbrInitMapKeys
+    au BufRead,BufNewFile,BufCreate * AbbrInitMapKeys
   end
 endfunction
 
