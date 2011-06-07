@@ -1,7 +1,7 @@
 " Advancer Abbreviate
 " Maintainer: Miao Jiang <jiangfriend@gmail.com>
-" Last Change: 2011-5-25
-" Version: 1.0.2
+" Last Change: 2011-6-08
+" Version: 1.0.3
 " Homepage: http://www.vim.org/scripts/script.php?script_id=3598
 " Repository: https://github.com/jiangmiao/advancer-abbreviation
 
