@@ -153,13 +153,15 @@ Write Your Own Abbreviation
 
 Map the expand and jump key
 ---------------------------
-    If <C-CR> or <S-CR> is used in other way, add
-    let g:AbbrPredefinedShortcuts = 0 to .vimrc
-    It will disable the ESC mapping too.
-
-    map the expand and jump key to Meta-m(Alt-m)
-    inoremap <buffer> <silent> <M-m> <ESC>a<C-R>=AbbrSmartExpand()<CR>
-    inoremap <buffer> <silent> <ESC> <C-O>:call AbbrClean()<CR><ESC>
+    If <C-CR> or <S-CR> is used in other way, set
+    g:AbbrShortcutSmartExpand
+    g:AbbrShortcutForceExpand
+    g:AbbrShortcutEscape
+    in .vimrc
+    eg:
+    let g:AbbrShortcutSmartExpand = '<M-m>'
+    let g:AbbrShortcutSmartExpand = ['<M-m>', '<S-CR>']
+    bind SmartExpand to M-m. value type should be string or list.
 
 
 TroubleShooting
