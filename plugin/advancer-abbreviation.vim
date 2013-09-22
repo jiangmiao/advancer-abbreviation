@@ -148,16 +148,18 @@ function! AbbrDoExpand(mode)
   " Jump to next placeholder
   let i = 0
   let cleaned = AbbrClean()
-  " Search current line if start with placeholders
-  let hint    = matchstr(getline('.'), '^\s*'.g:AbbrPlaceholdersPattern)
-  if hint!='' || search(g:AbbrPlaceholdersPattern,'W') 
-    if hint==''
-      let hint  = matchstr(getline('.'), g:AbbrPlaceholdersPattern, col('.')-1)
+  " Search placeholders in current line. Add +1 for later correct positioning
+  let pos = match(getline('.'), g:AbbrPlaceholdersPattern) + 1
+  if pos != 0 || search(g:AbbrPlaceholdersPattern,'W')
+    if pos == 0
+      let pos = col('.')
     end
     let b:abbr_lastline = line('.')
-    " Add ; to avoid vim clean the empty line
-    execute 'normal! cf'.hint[-1:].';'
-    return "\<Del>"
+    " Replace pattern with ; to avoid vim clean the empty line
+    let line = substitute(getline('.'), g:AbbrPlaceholdersPattern, ';', '')
+    call setline('.', line)
+    call cursor(0, pos)
+    return "\<DEL>"
   else
     if cleaned
       normal I;
